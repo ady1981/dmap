@@ -7,3 +7,6 @@
 
 who_am_i() ->
   {ok, node()}.
+
+test(X) ->
+  {ok, {node(), X}}.
