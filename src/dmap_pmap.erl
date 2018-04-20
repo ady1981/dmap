@@ -7,11 +7,12 @@
 pmap(Fn, Items, WorkersN) ->
   pmap(Fn, Items, WorkersN, 5000).
 
-%% @doc Функция запускает вычисление функции Fn для значений Items одновременно в WorkersN потоках. Функция ждет не больше времени Timeout для вычисления Fn(Item).
+%% @doc Функция запускает вычисление функции Fn для значений Items одновременно в WorkersN потоках. Функция ждет не больше времени Timeout для вычисления Fn(Item, WorkerIndex).
 %% until_first_error(Fn, Items, WorkersN, Timeout) -> {ok, [FnResult]} | {error, timeout}, throws {'EXIT', Reason} - результат выполненых вычислений.
+%% Fn(Item, WorkerIndex) -> FnResult, throws {'EXIT', Reason}.
 %% Детали вычислений:
-%%   - если во время вычисления Fn(Item) возникает ошибка {'EXIT', Reason}, то вычисление останавливается и бросается {'EXIT', Reason};
-%%   - если время вычисления хотя бы одного значения Fn(Item) превышает Timeout, то результат такого вычисления будет {error, timeout} и вычисление останавливается. Максимальное время вычисления без {error, timeout}
+%%   - если во время вычисления Fn(Item, WorkerIndex) возникает ошибка {'EXIT', Reason}, то вычисление останавливается и бросается {'EXIT', Reason};
+%%   - если время вычисления хотя бы одного значения Fn(Item, WorkerIndex) превышает Timeout, то результат такого вычисления будет {error, timeout} и вычисление останавливается. Максимальное время вычисления без {error, timeout}
 %% может немного превышать Timeout.
 pmap(Fn, Items, WorkersN, Timeout) when is_function(Fn), is_integer(WorkersN), WorkersN >= 1, is_list(Items) -> %% [FnResult], Result = FnResult | killed, length(Results) <= length(Items)
   Total = length(Items),
@@ -60,16 +61,17 @@ kill_workers(#{pids := PIDs} = State, Reason) ->
 pmap_loop(#{counter := Counter, total := Total, workers := Workers, workers_max := WorkersMax, fn := Fn, items := Items, pids := PIDs} = State) when Workers < WorkersMax, Counter =< Total ->
   Self = self(),
   Index = Counter,
+  WorkerIndex = Workers + 1,
   PID = spawn(fun() ->
     WorkerPID = self(),
     %%io:fwrite("{Index, PID, {W, WMax}}: ~p~n", [{Index, WorkerPID, {Workers + 1, WorkersMax}}]),
     Item = lists:nth(Index, Items),
-    Self ! {Index, WorkerPID, catch Fn(Item)}
+    Self ! {Index, WorkerPID, catch Fn(Item, WorkerIndex)}
     end),
   State2 = State#{counter => Counter + 1, workers => Workers + 1, pids => PIDs#{PID => Index}},
   pmap_loop(State2);
 
-pmap_loop(#{workers := Workers, timeout := Timeout, pids := PIDs} = State) when Workers > 0 ->
+pmap_loop(#{workers := Workers, timeout := Timeout, pids := _PIDs} = State) when Workers > 0 ->
   receive
     {Index, PID, {'EXIT', _Reason} = Result} when is_integer(Index) -> %% error case
       %%io:fwrite("got error: ~p~n", [{Index, PID, Result}]),
@@ -103,4 +105,4 @@ create_result(#{results := Results, pids := _PIDs} = _State) ->
 
 
 %% TODO: remove example
-%% catch dmap_pmap:until_first_error(fun(1) -> timer:sleep(100), error(xxx); (2) -> timer:sleep(100), ok end, lists:seq(1, 2), 3, 1000).
+%% catch dmap_pmap:pmap(fun(1, _) -> timer:sleep(100), exit(error); (2, _) -> timer:sleep(100), ok end, lists:seq(1, 2), 3, 1000).
