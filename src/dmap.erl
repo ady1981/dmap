@@ -3,8 +3,6 @@
 %% API exports
 -export([start/0]).
 
--compile([export_all]). %% TODO: dev only
-
 %%%% API
 
 start() ->
