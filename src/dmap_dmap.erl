@@ -5,9 +5,8 @@
 
 
 pmap({M, F}, Items, WorkersNodes, Timeout) ->
-  WorkersNodes2 = maps:from_list(dmap_util:map_indexed(fun(Index, Node) -> {Index, Node} end, WorkersNodes)),
   Fn = fun(Item, WorkerIndex) ->
-      Node = maps:get(WorkerIndex, WorkersNodes2),
+      Node = lists:nth(WorkerIndex, WorkersNodes),
       rpc:call(Node, M, F, [Item])
     end,
   dmap_pmap:pmap(Fn, Items, length(WorkersNodes), Timeout).
