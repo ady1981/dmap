@@ -15,4 +15,4 @@ map({M, F}, Items, WorkersNodes, Timeout) ->
 
 
 %% TODO: remove example
-%% dmap_dmap:pmap({dmap_test, test}, lists:seq(1,2), ['n1@127.0.0.1', 'n2@127.0.0.1'], 5000).
+%% dmap_dmap:map({dmap_test, test}, lists:seq(1,2), ['n1@127.0.0.1', 'n2@127.0.0.1'], 5000).
