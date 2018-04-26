@@ -1,15 +1,17 @@
 -module(dmap_dmap).
 
 %% API
--export([pmap/4]).
+-export([map/3, map/4]).
 
+map({M, F}, Items, WorkersNodes) ->
+  map({M, F}, Items, WorkersNodes, 5000).
 
-pmap({M, F}, Items, WorkersNodes, Timeout) ->
+map({M, F}, Items, WorkersNodes, Timeout) ->
   Fn = fun(Item, WorkerIndex) ->
       Node = lists:nth(WorkerIndex, WorkersNodes),
       rpc:call(Node, M, F, [Item])
     end,
-  dmap_pmap:pmap(Fn, Items, length(WorkersNodes), Timeout).
+  dmap_pmap:map(Fn, Items, length(WorkersNodes), Timeout).
 
 
 %% TODO: remove example

@@ -1,11 +1,11 @@
 -module(dmap_pmap).
 
 %% API
--export([pmap/3, pmap/4]).
+-export([map/3, map/4]).
 
 
-pmap(Fn, Items, WorkersN) ->
-  pmap(Fn, Items, WorkersN, 5000).
+map(Fn, Items, WorkersN) ->
+  map(Fn, Items, WorkersN, 5000).
 
 %% @doc Функция запускает вычисление функции Fn для значений Items одновременно в WorkersN потоках. Функция ждет не больше времени Timeout для вычисления Fn(Item, WorkerIndex).
 %% until_first_error(Fn, Items, WorkersN, Timeout) -> {ok, [FnResult]} | {error, timeout}, throws {'EXIT', Reason} - результат выполненых вычислений.
@@ -14,7 +14,7 @@ pmap(Fn, Items, WorkersN) ->
 %%   - если во время вычисления Fn(Item, WorkerIndex) возникает ошибка {'EXIT', Reason}, то вычисление останавливается и бросается {'EXIT', Reason};
 %%   - если время вычисления хотя бы одного значения Fn(Item, WorkerIndex) превышает Timeout, то результат такого вычисления будет {error, timeout} и вычисление останавливается. Максимальное время вычисления без {error, timeout}
 %% может немного превышать Timeout.
-pmap(Fn, Items, WorkersN, Timeout) when is_function(Fn), is_integer(WorkersN), WorkersN >= 1, is_list(Items) -> %% [FnResult], Result = FnResult | killed, length(Results) <= length(Items)
+map(Fn, Items, WorkersN, Timeout) when is_function(Fn), is_integer(WorkersN), WorkersN >= 1, is_list(Items) -> %% [FnResult], Result = FnResult | killed, length(Results) <= length(Items)
   Total = length(Items),
   State = #{fn => Fn, items => Items, results => #{}, counter => 1, total => Total, workers => 0, workers_max => min(WorkersN, Total), pids => #{}, timeout => Timeout},
   Self = self(),
