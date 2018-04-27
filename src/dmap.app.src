@@ -1,5 +1,5 @@
 {application, dmap,
-  [{description, "An OTP library"},
+  [{description, "Dmap example"},
     {vsn, "0.1.0"},
     {registered, []},
     {applications,
