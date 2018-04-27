@@ -1,9 +1,9 @@
 dmap
 =====
 
-An OTP library
+Simple distributed map executor. 
 
 Build
 -----
 
-    $ rebar3 compile
+    $ make compile
