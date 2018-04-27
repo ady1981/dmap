@@ -19,7 +19,7 @@ map(Fn, Items, WorkersN, Timeout) when is_function(Fn), is_integer(WorkersN), Wo
   Context = #{fn => Fn, items => Items, results => #{}, counter => 1, total => Total, workers => 0, workers_max => min(WorkersN, Total), pids => #{}, timeout => Timeout},
   Self = self(),
   spawn(fun() ->
-    Self ! pmap_loop(Context)
+    Self ! map_loop(Context)
   end),
   Result = receive
              Any -> Any
@@ -58,7 +58,7 @@ kill_workers(#{pids := PIDs} = Context, Reason) ->
     maps:to_list(PIDs)).
 
 
-pmap_loop(#{counter := Counter, total := Total, workers := Workers, workers_max := WorkersMax, fn := Fn, items := Items, pids := PIDs} = Context) when Workers < WorkersMax, Counter =< Total ->
+map_loop(#{counter := Counter, total := Total, workers := Workers, workers_max := WorkersMax, fn := Fn, items := Items, pids := PIDs} = Context) when Workers < WorkersMax, Counter =< Total ->
   Self = self(),
   Index = Counter,
   WorkerIndex = Workers + 1,
@@ -69,9 +69,9 @@ pmap_loop(#{counter := Counter, total := Total, workers := Workers, workers_max 
     Self ! {Index, WorkerPID, catch Fn(Item, WorkerIndex)}
     end),
   Context2 = Context#{counter => Counter + 1, workers => Workers + 1, pids => PIDs#{PID => Index}},
-  pmap_loop(Context2);
+  map_loop(Context2);
 
-pmap_loop(#{workers := Workers, timeout := Timeout, pids := _PIDs} = Context) when Workers > 0 ->
+map_loop(#{workers := Workers, timeout := Timeout, pids := _PIDs} = Context) when Workers > 0 ->
   receive
     {Index, PID, {'EXIT', _Reason} = Result} when is_integer(Index) -> %% error case
       %%io:fwrite("got error: ~p~n", [{Index, PID, Result}]),
@@ -82,7 +82,7 @@ pmap_loop(#{workers := Workers, timeout := Timeout, pids := _PIDs} = Context) wh
     {Index, PID, Result} when is_integer(Index) -> %% ok case
       %%io:fwrite("got result: ~p~n", [{Index, PID, Result}]),
       Context2 = set_worker_result(PID, {Index, Result}, Context),
-      pmap_loop(Context2)
+      map_loop(Context2)
 
   after Timeout -> %% timeout case
       %%io:fwrite("timeout: ~p~n", [#{context => Context}]),
@@ -90,7 +90,7 @@ pmap_loop(#{workers := Workers, timeout := Timeout, pids := _PIDs} = Context) wh
       create_result(Context3)
   end;
 
-pmap_loop(#{workers := Workers, pids := PIDs} = Context) when Workers == 0, PIDs == #{} ->
+map_loop(#{workers := Workers, pids := PIDs} = Context) when Workers == 0, PIDs == #{} ->
   create_result(Context).
 
 
