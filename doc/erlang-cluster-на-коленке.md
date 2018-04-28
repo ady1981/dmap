@@ -175,7 +175,7 @@ got result: {1,<0.1010.0>,1}
 
 2) Запустим вычисление для 2-х воркеров, так, чтобы в первом воркере случился креш:
  
-`>catch dmap_pmap:map(fun(1, _) -> timer:sleep(100), erlang:exit(terrible_error); (2, _) -> timer:sleep(100), 2 end, lists:seq(1, 2), 2, 5000).`
+`>catch dmap_pmap:map(fun(1, _) -> timer:sleep(100), erlang:exit(terrible_error); (2, _) -> timer:sleep(100), 2 end, [1, 2], 2, 5000).`
  
 ```erlang
 {Index, PID, {W, WMax}}: {1,<0.2149.0>,{1,2}}
@@ -187,7 +187,7 @@ kill: <0.2150.0>
 
 3) Запустим вычисление для 2-х воркеров, так, чтобы время вычисления функции превысило разрешенный таймаут:
 
-`> catch dmap_pmap:map(fun(1, _) -> timer:sleep(2000), erlang:exit(terrible_error); (2, _) -> timer:sleep(100), 2 end, lists:seq(1, 2), 2, 1000).`
+`> catch dmap_pmap:map(fun(1, _) -> timer:sleep(2000), erlang:exit(terrible_error); (2, _) -> timer:sleep(100), 2 end, [1, 2], 2, 1000).`
 
 ```erlang
 {Index, PID, {W, WMax}}: {1,<0.3184.0>,{1,2}}
@@ -252,7 +252,7 @@ test(X) ->
 
 Запустим вычисление на первой ноде:
 
-`(n1@127.0.0.1)1> dmap_dmap:map({dmap_test, test}, lists:seq(1,2), ['n1@127.0.0.1', 'n2@127.0.0.1'], 5000).`
+`(n1@127.0.0.1)1> dmap_dmap:map({dmap_test, test}, [1, 2], ['n1@127.0.0.1', 'n2@127.0.0.1'], 5000).`
 
 И получим результат:
 
